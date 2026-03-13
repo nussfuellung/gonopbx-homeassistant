@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-echo "Starting GonoPBX All-in-One Initialization..."
+echo "============================================"
+echo "   GonoPBX All-in-One Startup Script"
+echo "============================================"
 
 # 1. PostgreSQL Verzeichnis-Rechte fixen
 mkdir -p /var/run/postgresql
@@ -17,11 +19,26 @@ echo "Richte Datenbank-Nutzer ein..."
 su - postgres -c "psql -c \"CREATE USER asterisk WITH PASSWORD 'gonopbx_db_pass';\"" || true
 su - postgres -c "psql -c \"CREATE DATABASE asterisk_gui OWNER asterisk;\"" || true
 
-# Stoppe den temporären Postgres-Server wieder
+# Stoppe den temporären Postgres-Server wieder (Supervisor übernimmt gleich)
 su - postgres -c "/usr/lib/postgresql/14/bin/pg_ctl -D /etc/postgresql/14/main stop"
 sleep 2
 
-# 3. Asterisk-Verzeichnisse zur Sicherheit anlegen (Rechte bleiben bei root)
+# 3. Port aus Home Assistant Optionen auslesen
+echo "Lese Add-on Konfiguration..."
+WEB_PORT=8080
+if [ -f /data/options.json ]; then
+    # Holt sich den Port aus der HA-Config (falls vorhanden)
+    CONFIG_PORT=$(grep -o '"web_port": *[0-9]*' /data/options.json | grep -o '[0-9]*' || true)
+    if [ ! -z "$CONFIG_PORT" ]; then
+        WEB_PORT=$CONFIG_PORT
+    fi
+fi
+
+echo "Konfiguriere Web-Port auf: $WEB_PORT"
+# Tauscht die 8080 in der Nginx-Config gegen den gewünschten Port aus
+sed -i "s/8080/$WEB_PORT/g" /etc/nginx/sites-available/default
+
+# 4. Asterisk-Verzeichnisse zur Sicherheit anlegen (Wir laufen als root)
 echo "Erstelle Asterisk-Verzeichnisse..."
 mkdir -p /var/run/asterisk \
          /var/spool/asterisk/voicemail \
@@ -31,5 +48,5 @@ mkdir -p /var/run/asterisk \
 
 echo "Initialisierung abgeschlossen. Übergebe an Supervisor..."
 
-# 4. Supervisor starten
+# 5. Supervisor starten
 exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
