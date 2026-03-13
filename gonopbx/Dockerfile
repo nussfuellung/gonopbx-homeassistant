@@ -22,18 +22,43 @@ RUN git clone https://github.com/ankaios76/gonopbx.git .
 RUN python3 -m venv /app/venv
 RUN /app/venv/bin/pip install --upgrade pip
 RUN /app/venv/bin/pip install -r /app/backend/requirements.txt
-# WICHTIG: Wir installieren uvicorn explizit im venv
 RUN /app/venv/bin/pip install uvicorn
 
-# 5. Frontend bauen & PFAD-CHIRURGIE
+# 5. Frontend bauen & DER INGRESS-INTERCEPTOR
 WORKDIR /app/frontend
 RUN npm install
 RUN npx vite build --base="./"
 WORKDIR /app/frontend/dist
-# Wir löschen JEDEN absoluten Pfad zu /api oder /logo in den Dateien
-RUN find . -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i 's|"/api| "api|g' {} +
-RUN find . -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i "s|'/api| 'api|g" {} +
-RUN find . -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i 's|"/logo| "logo|g' {} +
+
+# Logo-Pfad reparieren (das hat ja schon geklappt!)
+RUN sed -i 's|"/logo| "./logo|g' index.html
+RUN sed -i "s|'/logo| './logo|g" index.html
+RUN sed -i 's|src="/|src="./|g' index.html
+RUN sed -i 's|href="/|href="./|g' index.html
+
+# Hier ist die Magie: Wir injizieren ein Skript in den <head> der index.html,
+# das alle Anfragen an /api abfängt und den aktuellen Pfad (den Ingress-Pfad) davor setzt.
+RUN sed -i '/<head>/a \
+    <script>\
+      const originalFetch = window.fetch;\
+      window.fetch = async (...args) => {\
+        let [resource, config] = args;\
+        if (typeof resource === "string" && resource.startsWith("/api/")) {\
+          const basePath = window.location.pathname.replace(/\\/$/, "");\
+          resource = basePath + resource;\
+        }\
+        return originalFetch(resource, config);\
+      };\
+      const originalXHROpen = XMLHttpRequest.prototype.open;\
+      XMLHttpRequest.prototype.open = function(method, url, ...rest) {\
+        if (typeof url === "string" && url.startsWith("/api/")) {\
+          const basePath = window.location.pathname.replace(/\\/$/, "");\
+          url = basePath + url;\
+        }\
+        return originalXHROpen.call(this, method, url, ...rest);\
+      };\
+    </script>' index.html
+
 RUN cp -r * /var/www/html/
 
 # 6. Asterisk Configs
