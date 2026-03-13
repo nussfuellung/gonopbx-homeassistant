@@ -1,6 +1,6 @@
 FROM nussfuellung/gonopbx:latest
 
-RUN apk add --no-cache supervisor
+RUN apt-get update && apt-get install -y supervisor
 
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
