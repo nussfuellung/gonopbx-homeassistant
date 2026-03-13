@@ -5,7 +5,7 @@
   "description": "Modern Asterisk PBX with Web Interface",
   "startup": "services",
   "boot": "auto",
-  "arch": ["amd64", "aarch64", "armv7", "armhf"],
+  "arch": ["amd64"],
   "init": false,
 
   "host_network": true,
