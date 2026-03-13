@@ -23,11 +23,11 @@ RUN git clone https://github.com/ankaios76/gonopbx.git .
 RUN python3 -m venv /app/venv
 RUN /app/venv/bin/pip install -r /app/backend/requirements.txt
 
-# 5. Frontend bauen MIT RELATIVEN PFADEN
-# Das sorgt dafür, dass die App ihre API unter ./api statt /api sucht
+# 5. Frontend bauen MIT TOTALER RELATIVITÄT
 WORKDIR /app/frontend
 RUN npm install
-RUN npx vite build --base="./"
+# Eine leere Base zwingt Vite zu rein relativen Pfaden ohne führende Slashes
+RUN npx vite build --base=""
 RUN cp -r dist/* /var/www/html/
 RUN chown -R www-data:www-data /var/www/html
 
