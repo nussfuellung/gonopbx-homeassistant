@@ -18,19 +18,15 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 WORKDIR /app
 RUN git clone https://github.com/ankaios76/gonopbx.git .
 
-# 4. Python Backend
+# 4. Python Backend einrichten
 RUN python3 -m venv /app/venv
 RUN /app/venv/bin/pip install -r /app/backend/requirements.txt
 
-# 5. Frontend bauen & PFADE PATCHEN
+# 5. Frontend bauen (Fix für Home Assistant Ingress)
 WORKDIR /app/frontend
 RUN npm install
-RUN npx vite build --base=""
-# Hier passiert die Magie: Wir entfernen führende Slashes in den gebauten JS/HTML Dateien
-RUN find dist -type f -name "*.js" -exec sed -i 's|"/api| "api|g' {} +
-RUN find dist -type f -name "*.js" -exec sed -i "s|'/api| 'api|g" {} +
-RUN sed -i 's|src="/|src="./|g' dist/index.html
-RUN sed -i 's|href="/|href="./|g' dist/index.html
+# Wir stellen sicher, dass die App relative Pfade nutzt
+RUN npx vite build --base="./"
 RUN cp -r dist/* /var/www/html/
 RUN chown -R www-data:www-data /var/www/html
 
@@ -39,7 +35,7 @@ RUN rm -f /app/asterisk/config/modules.conf \
     && rm -f /app/asterisk/config/asterisk.conf \
     && cp -r /app/asterisk/config/* /etc/asterisk/ 2>/dev/null || true
 
-# 7. Add-on Dateien
+# 7. Eigene Configs in den Container schieben
 WORKDIR /
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY nginx.conf /etc/nginx/nginx.conf
