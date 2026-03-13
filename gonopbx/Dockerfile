@@ -1,5 +1,5 @@
-ARG BUILD_FROM=ghcr.io/gonopbx/gonopbx:latest
-FROM $BUILD_FROM
+FROM nussfuellung/gonopbx:latest
+
 
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
