@@ -1,8 +1,7 @@
-FROM ghcr.io/gonopbx/gonopbx:latest
+ARG BUILD_FROM=ghcr.io/gonopbx/gonopbx:latest
+FROM $BUILD_FROM
 
-RUN apk add --no-cache bash
-
-COPY run.sh /
+COPY run.sh /run.sh
 RUN chmod +x /run.sh
 
 CMD [ "/run.sh" ]
