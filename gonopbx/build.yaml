@@ -1,0 +1,5 @@
+build_from:
+  amd64: ghcr.io/gonopbx/gonopbx:latest
+  aarch64: ghcr.io/gonopbx/gonopbx:latest
+  armv7: ghcr.io/gonopbx/gonopbx:latest
+  armhf: ghcr.io/gonopbx/gonopbx:latest
