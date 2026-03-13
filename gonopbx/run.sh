@@ -21,6 +21,12 @@ su - postgres -c "psql -c \"CREATE DATABASE asterisk_gui OWNER asterisk;\"" || t
 su - postgres -c "/usr/lib/postgresql/14/bin/pg_ctl -D /etc/postgresql/14/main stop"
 sleep 2
 
+echo "Erstelle Asterisk-Verzeichnisse..."
+mkdir -p /var/run/asterisk
+mkdir -p /var/spool/asterisk/voicemail
+mkdir -p /var/log/asterisk
+chown -R asterisk:asterisk /var/run/asterisk /var/spool/asterisk /var/log/asterisk /etc/asterisk || true
+
 echo "Initialisierung abgeschlossen. Übergebe an Supervisor..."
 
 # 3. Supervisor starten
