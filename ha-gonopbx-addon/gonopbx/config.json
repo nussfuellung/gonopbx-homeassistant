@@ -2,15 +2,26 @@
   "name": "GonoPBX",
   "version": "1.0.0",
   "slug": "gonopbx",
-  "description": "Modern Asterisk PBX with Web UI",
+  "description": "Modern Asterisk PBX with Web Interface",
   "startup": "services",
   "boot": "auto",
+  "arch": ["amd64", "aarch64", "armv7", "armhf"],
+  "init": false,
+
   "host_network": true,
-  "arch": ["armhf", "armv7", "aarch64", "amd64"],
-  "ports": {
-    "8080/tcp": 8080,
-    "5060/udp": 5060
+
+  "ingress": true,
+  "ingress_port": 8080,
+  "panel_icon": "mdi:phone",
+
+  "options": {
+    "web_port": 8080
   },
+
+  "schema": {
+    "web_port": "port"
+  },
+
   "map": [
     "config:rw",
     "ssl"
