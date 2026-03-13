@@ -1,5 +1,4 @@
-ARG BUILD_FROM=ubuntu:22.04
-FROM $BUILD_FROM
+FROM ubuntu:22.04
 
 # Verhindert interaktive Prompts während der Installation
 ENV DEBIAN_FRONTEND=noninteractive
