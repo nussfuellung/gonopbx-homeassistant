@@ -1,10 +1,5 @@
-#!/usr/bin/with-contenv bashio
-
-WEB_PORT=$(bashio::config 'web_port')
-
-bashio::log.info "Starting GonoPBX..."
-bashio::log.info "Webinterface Port: $WEB_PORT"
-
+#!/bin/bash
+WEB_PORT=${WEB_PORT:-8080}
+echo "Starting GonoPBX on port $WEB_PORT"
 export GONOPBX_HTTP_PORT=$WEB_PORT
-
 exec /usr/bin/supervisord
