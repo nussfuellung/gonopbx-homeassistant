@@ -21,45 +21,14 @@ RUN git clone https://github.com/ankaios76/gonopbx.git .
 # 4. Python Backend Setup
 RUN python3 -m venv /app/venv
 RUN /app/venv/bin/pip install --upgrade pip
-RUN /app/venv/bin/pip install -r /app/backend/requirements.txt
-RUN /app/venv/bin/pip install uvicorn
+RUN /app/venv/bin/pip install -r /app/backend/requirements.txt uvicorn
 
-# 5. Frontend bauen & DER INGRESS-INTERCEPTOR
+# 5. Frontend GANZ NORMAL bauen
 WORKDIR /app/frontend
 RUN npm install
-RUN npx vite build --base="./"
-WORKDIR /app/frontend/dist
-
-# Logo-Pfad reparieren (das hat ja schon geklappt!)
-RUN sed -i 's|"/logo| "./logo|g' index.html
-RUN sed -i "s|'/logo| './logo|g" index.html
-RUN sed -i 's|src="/|src="./|g' index.html
-RUN sed -i 's|href="/|href="./|g' index.html
-
-# Hier ist die Magie: Wir injizieren ein Skript in den <head> der index.html,
-# das alle Anfragen an /api abfängt und den aktuellen Pfad (den Ingress-Pfad) davor setzt.
-RUN sed -i '/<head>/a \
-    <script>\
-      const originalFetch = window.fetch;\
-      window.fetch = async (...args) => {\
-        let [resource, config] = args;\
-        if (typeof resource === "string" && resource.startsWith("/api/")) {\
-          const basePath = window.location.pathname.replace(/\\/$/, "");\
-          resource = basePath + resource;\
-        }\
-        return originalFetch(resource, config);\
-      };\
-      const originalXHROpen = XMLHttpRequest.prototype.open;\
-      XMLHttpRequest.prototype.open = function(method, url, ...rest) {\
-        if (typeof url === "string" && url.startsWith("/api/")) {\
-          const basePath = window.location.pathname.replace(/\\/$/, "");\
-          url = basePath + url;\
-        }\
-        return originalXHROpen.call(this, method, url, ...rest);\
-      };\
-    </script>' index.html
-
-RUN cp -r * /var/www/html/
+RUN npm run build
+RUN cp -r dist/* /var/www/html/
+RUN chown -R www-data:www-data /var/www/html
 
 # 6. Asterisk Configs
 RUN rm -f /app/asterisk/config/modules.conf && \
