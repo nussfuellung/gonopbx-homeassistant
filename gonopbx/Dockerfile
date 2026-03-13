@@ -39,6 +39,7 @@ RUN rm -f /app/asterisk/config/modules.conf \
 # 7. Eigene Configs kopieren
 WORKDIR /
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY nginx.conf /etc/nginx/sites-available/default
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
 
