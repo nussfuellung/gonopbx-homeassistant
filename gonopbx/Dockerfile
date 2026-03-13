@@ -31,7 +31,7 @@ RUN cp -r dist/* /var/www/html/
 RUN chown -R www-data:www-data /var/www/html
 
 # 6. Asterisk Konfigurationen aus GonoPBX kopieren
-RUN cp -r /app/asterisk/config/* /etc/asterisk/ 2>/dev/null || true
+#RUN cp -r /app/asterisk/config/* /etc/asterisk/ 2>/dev/null || true
 
 # 7. Eigene Configs kopieren
 WORKDIR /
