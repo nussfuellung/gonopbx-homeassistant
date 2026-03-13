@@ -18,21 +18,21 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 WORKDIR /app
 RUN git clone https://github.com/ankaios76/gonopbx.git .
 
-# 4. Python Backend
+# 4. Python Backend einrichten
 RUN python3 -m venv /app/venv
 RUN /app/venv/bin/pip install -r /app/backend/requirements.txt
 
-# 5. Frontend bauen & PFADE REPARIEREN
+# 5. Frontend bauen & PFAD-FIX
 WORKDIR /app/frontend
 RUN npm install
-RUN npx vite build --base=""
-# Dieser Teil ersetzt "/api" durch "api" (relativ) in allen JS-Dateien
-RUN find dist -type f -name "*.js" -exec sed -i 's|"/api| "api|g' {} +
-RUN find dist -type f -name "*.js" -exec sed -i "s|'/api| 'api|g" {} +
-# Repariert das Logo und andere Assets in der HTML
-RUN sed -i 's|src="/|src="./|g' dist/index.html
-RUN sed -i 's|href="/|href="./|g' dist/index.html
-RUN cp -r dist/* /var/www/html/
+# Wir bauen GANZ NORMAL ohne extra Flags, die "true" erzeugen könnten
+RUN npm run build
+WORKDIR /app/frontend/dist
+# Wir machen alle Pfade in der index.html RELATIV (entfernen den führenden /)
+RUN sed -i 's|href="/|href="./|g' index.html
+RUN sed -i 's|src="/|src="./|g' index.html
+# Wir kopieren alles nach /var/www/html
+RUN cp -r /app/frontend/dist/* /var/www/html/
 RUN chown -R www-data:www-data /var/www/html
 
 # 6. Asterisk Konfigurationen
