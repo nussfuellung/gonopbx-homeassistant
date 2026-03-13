@@ -30,8 +30,11 @@ RUN VITE_UI_LANG=de npm run build
 RUN cp -r dist/* /var/www/html/
 RUN chown -R www-data:www-data /var/www/html
 
-# 6. Asterisk Konfigurationen aus GonoPBX kopieren
-#RUN cp -r /app/asterisk/config/* /etc/asterisk/ 2>/dev/null || true
+# 6. Asterisk Konfigurationen aus GonoPBX vorsichtig kopieren
+# Wir löschen die GonoPBX modules.conf und asterisk.conf, damit Asterisk seine eigenen, funktionierenden behält!
+RUN rm -f /app/asterisk/config/modules.conf \
+    && rm -f /app/asterisk/config/asterisk.conf \
+    && cp -r /app/asterisk/config/* /etc/asterisk/ 2>/dev/null || true
 
 # 7. Eigene Configs kopieren
 WORKDIR /
