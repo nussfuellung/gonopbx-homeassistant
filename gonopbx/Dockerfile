@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. System-Abhängigkeiten
+# 1. System-Pakete
 RUN apt-get update && apt-get install -y \
     supervisor postgresql postgresql-contrib \
     asterisk asterisk-modules sqlite3 \
@@ -18,27 +18,28 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 WORKDIR /app
 RUN git clone https://github.com/ankaios76/gonopbx.git .
 
-# 4. Python Backend einrichten
+# 4. Python Backend Setup
 RUN python3 -m venv /app/venv
+RUN /app/venv/bin/pip install --upgrade pip
 RUN /app/venv/bin/pip install -r /app/backend/requirements.txt
+# WICHTIG: Wir installieren uvicorn explizit im venv
+RUN /app/venv/bin/pip install uvicorn
 
-# 5. Frontend bauen & PFAD-FIX
+# 5. Frontend bauen & PFAD-CHIRURGIE
 WORKDIR /app/frontend
 RUN npm install
-# Wir bauen GANZ NORMAL ohne extra Flags, die "true" erzeugen könnten
-RUN npm run build
+RUN npx vite build --base="./"
 WORKDIR /app/frontend/dist
-# Wir machen alle Pfade in der index.html RELATIV (entfernen den führenden /)
-RUN sed -i 's|href="/|href="./|g' index.html
-RUN sed -i 's|src="/|src="./|g' index.html
-# Wir kopieren alles nach /var/www/html
-RUN cp -r /app/frontend/dist/* /var/www/html/
-RUN chown -R www-data:www-data /var/www/html
+# Wir löschen JEDEN absoluten Pfad zu /api oder /logo in den Dateien
+RUN find . -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i 's|"/api| "api|g' {} +
+RUN find . -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i "s|'/api| 'api|g" {} +
+RUN find . -type f \( -name "*.js" -o -name "*.html" \) -exec sed -i 's|"/logo| "logo|g' {} +
+RUN cp -r * /var/www/html/
 
-# 6. Asterisk Konfigurationen
-RUN rm -f /app/asterisk/config/modules.conf \
-    && rm -f /app/asterisk/config/asterisk.conf \
-    && cp -r /app/asterisk/config/* /etc/asterisk/ 2>/dev/null || true
+# 6. Asterisk Configs
+RUN rm -f /app/asterisk/config/modules.conf && \
+    rm -f /app/asterisk/config/asterisk.conf && \
+    cp -r /app/asterisk/config/* /etc/asterisk/ 2>/dev/null || true
 
 # 7. Add-on Dateien
 WORKDIR /
