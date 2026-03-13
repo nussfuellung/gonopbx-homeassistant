@@ -17,18 +17,17 @@ echo "Richte Datenbank-Nutzer ein..."
 su - postgres -c "psql -c \"CREATE USER asterisk WITH PASSWORD 'gonopbx_db_pass';\"" || true
 su - postgres -c "psql -c \"CREATE DATABASE asterisk_gui OWNER asterisk;\"" || true
 
-# Stoppe den temporären Postgres-Server wieder (Supervisor übernimmt gleich)
+# Stoppe den temporären Postgres-Server wieder
 su - postgres -c "/usr/lib/postgresql/14/bin/pg_ctl -D /etc/postgresql/14/main stop"
 sleep 2
 
-# 3. Asterisk-Verzeichnisse erstellen und Rechte setzen (inklusive /var/lib/asterisk!)
+# 3. Asterisk-Verzeichnisse zur Sicherheit anlegen (Rechte bleiben bei root)
 echo "Erstelle Asterisk-Verzeichnisse..."
-mkdir -p /var/run/asterisk
-mkdir -p /var/spool/asterisk/voicemail
-mkdir -p /var/log/asterisk
-mkdir -p /var/lib/asterisk
-
-chown -R asterisk:asterisk /var/run/asterisk /var/spool/asterisk /var/log/asterisk /var/lib/asterisk /etc/asterisk || true
+mkdir -p /var/run/asterisk \
+         /var/spool/asterisk/voicemail \
+         /var/log/asterisk \
+         /var/lib/asterisk \
+         /usr/lib/asterisk/modules
 
 echo "Initialisierung abgeschlossen. Übergebe an Supervisor..."
 
